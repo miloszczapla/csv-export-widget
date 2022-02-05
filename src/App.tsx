@@ -1,7 +1,10 @@
 import React from 'react';
+import ExportReportForm from './ExportReportForm';
 
-function App() {
-  return <div className='App top-10'>aaa</div>;
+export default function App() {
+  return (
+    <div className='flex justify-center pt-10'>
+      <ExportReportForm />
+    </div>
+  );
 }
-
-export default App;
