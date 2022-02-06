@@ -2,16 +2,18 @@ import React from 'react';
 
 type RadioButtonProps = {
   label: string;
-  value: string;
+  radioValue: string;
   name: string;
-  onChange?: (value: string) => void;
+  onChange?: (radioValue: string) => void;
+  required?: boolean;
 };
 
 export default function RadioButton({
   label,
-  value,
+  radioValue,
   name,
   onChange,
+  required,
 }: RadioButtonProps) {
   return (
     <div className='space-x-1'>
@@ -19,11 +21,12 @@ export default function RadioButton({
         className='cursor-pointer'
         type='radio'
         name={name}
-        value={value}
-        id={`${value}-radio`}
-        onClick={() => onChange?.(value)}
+        value={radioValue}
+        id={`${radioValue}-radio`}
+        onClick={() => onChange?.(radioValue)}
+        required
       />
-      <label className='cursor-pointer ' htmlFor={`${value}-radio`}>
+      <label className='cursor-pointer ' htmlFor={`${radioValue}-radio`}>
         {label}
       </label>
     </div>

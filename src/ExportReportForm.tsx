@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import RadioButton from './RadioButton';
 
+const POST_URL = 'https://httpbin.org/anything';
+
 const formatRadioOptions = [
   {
     label: 'Excel',
@@ -40,19 +42,35 @@ const weekdays = [
   'sunday',
 ];
 
+type RestructuredFormData = {
+  [key: string]: any;
+};
+
 export default function ExportReportForm() {
   const [isSpecificDate, setIsSpecificDate] = useState(false);
-  const [isDaily, setIsDaily] = useState(false);
+  const [isWeekly, setIsWeekly] = useState(false);
   const [isHourInput, setisHourInput] = useState(false);
+  const [isRequestSuccess, setIsRequestSuccess] = useState(false);
 
   async function onFormSubmit(form: React.FormEvent<HTMLFormElement>) {
     form.preventDefault();
 
     const formData = new FormData(form.currentTarget);
 
+    const restructuredFormData: RestructuredFormData = {};
+
     formData.forEach((value, key) => {
-      console.log(`${key}: ${value}`);
+      restructuredFormData[key as string] = value;
     });
+
+    console.log(JSON.stringify(restructuredFormData));
+
+    const response = await fetch(POST_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(restructuredFormData),
+    });
+    setIsRequestSuccess(response.status === 200);
   }
 
   function resetForm() {
@@ -60,32 +78,36 @@ export default function ExportReportForm() {
       'export-report-form'
     ) as HTMLFormElement;
     form.reset();
+    onScheduleChange('no-repeat');
   }
 
   function onScheduleChange(schedule: string) {
     switch (schedule) {
       case 'no-repeat':
-        setIsDaily(false);
+        setIsWeekly(false);
         setIsSpecificDate(false);
         setisHourInput(false);
         break;
       case 'daily':
-        setIsDaily(false);
+        setIsWeekly(false);
         setIsSpecificDate(false);
         setisHourInput(true);
         break;
       case 'specific':
-        setIsDaily(false);
+        setIsWeekly(false);
         setIsSpecificDate(true);
         setisHourInput(true);
         break;
       case 'weekly':
-        setIsDaily(true);
+        setIsWeekly(true);
         setIsSpecificDate(false);
         setisHourInput(true);
         break;
 
       default:
+        setIsWeekly(false);
+        setIsSpecificDate(false);
+        setisHourInput(false);
         break;
     }
   }
@@ -111,7 +133,7 @@ export default function ExportReportForm() {
               <RadioButton
                 key={option.value}
                 label={option.label}
-                value={option.value}
+                radioValue={option.value}
                 name='format'
               />
             ))}
@@ -120,7 +142,7 @@ export default function ExportReportForm() {
           <input
             name='email-address'
             className='form-input'
-            type='mail'
+            type='email'
             placeholder='client@company.com'
             required
           />
@@ -130,15 +152,19 @@ export default function ExportReportForm() {
               <RadioButton
                 key={option.value}
                 label={option.label}
-                value={option.value}
+                radioValue={option.value}
                 name='schedule'
                 onChange={onScheduleChange}
               />
             ))}
           </div>
-          <p className='flex items-center'>Every</p>
+          <p className='flex items-center'>
+            {isSpecificDate && 'Date'}
+            {isWeekly && 'Every'}
+            {isHourInput && !isSpecificDate && !isWeekly && 'Everyday at'}
+          </p>
           <div className='flex items-center space-x-4 h-9'>
-            {isDaily && (
+            {isWeekly && (
               <select name='weekday' id='' className='form-input capitalize'>
                 {weekdays.map((day) => (
                   <option key={day} value={day}>
@@ -156,7 +182,7 @@ export default function ExportReportForm() {
               />
             )}
 
-            {(isSpecificDate || isDaily) && isHourInput && (
+            {(isSpecificDate || isWeekly) && isHourInput && (
               <p className='flex items-center'>at</p>
             )}
             {isHourInput && (
@@ -188,6 +214,11 @@ export default function ExportReportForm() {
           </button>
         </div>
       </form>
+      {isRequestSuccess && (
+        <p className='pb-3 px-3 text-base text-center'>
+          Report has been successfully exported.
+        </p>
+      )}
     </div>
   );
 }
